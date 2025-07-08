@@ -1,0 +1,70 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Player {
+  id          String     @id @default(uuid())
+  name        String
+  number      Int?
+  position    String     @default("投手")
+  throwingArm String     @default("右投") // 右投 or 左投
+  battingArm  String     @default("右打") // 右打 or 左打
+  photoUrl    String?
+  pitchData   PitchData[]
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+}
+
+model PitchData {
+  id             String          @id @default(uuid())
+  player         Player          @relation(fields: [playerId], references: [id])
+  playerId       String
+  date           DateTime        @default(now())
+  pitchNumber    Int
+  pitchType      String          // 球種: 四縫線快速球, 二縫線快速球, 曲球, 變速球, 滑球, 指叉球
+  speed          Float           // 球速 (mph)
+  spinRate       Float?          // 旋轉速度 (RPM)
+  spinAxis       Json?           // 旋轉軸角度 (x, y, z)
+  spinEfficiency Float?          // 旋轉效率 (%)
+  releasePoint   Float?          // 釋球點高度 (ft)
+  verticalMove   Float?          // 垂直移動 (in)
+  horizontalMove Float?          // 水平移動 (in)
+  postureScores  PostureScore[]
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+}
+
+model PostureScore {
+  id          String    @id @default(uuid())
+  pitchData   PitchData @relation(fields: [pitchDataId], references: [id])
+  pitchDataId String
+  name        String    // 手腕, 手肘, 抬腿, 腰部旋轉, 踩步, 平均評分
+  score       Int       // 0-100
+  distance    Float?    // 移動距離 (cm)
+  height      Float?    // 高度 (cm)
+  angle       Float?    // 角度 (度)
+  bestScore   Int?      // 歷史最佳分數
+  avgScore    Int?      // 歷史平均分數
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model PitchTypeData {
+  id             String          @id @default(uuid())
+  name           String          // 球種名稱
+  speedRange     String          // 球速範圍
+  spinRateRange  String          // 旋轉速度範圍
+  spinAxisRange  String          // 旋轉軸角度範圍
+  spinEfficiency String          // 旋轉效率範圍
+  postureScores  Json            // 投手姿勢評分
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+}
